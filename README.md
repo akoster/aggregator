@@ -2,9 +2,9 @@
 
 Reading material on cashflow forecast models:
 
-https://corporatefinanceinstitute.com/resources/knowledge/modeling/monthly-cash-flow-forecast-model/
-https://www.cashanalytics.com/daily-cash-flow/
-https://www.cashanalytics.com/13-week-cash-flow/
+* https://corporatefinanceinstitute.com/resources/knowledge/modeling/monthly-cash-flow-forecast-model/
+* https://www.cashanalytics.com/daily-cash-flow/
+* https://www.cashanalytics.com/13-week-cash-flow/
 
 To populate the tables run the following command in Postgres:
 
@@ -28,4 +28,39 @@ COPY cff_output(date,bank_account,account_code,customer_id,amount,forecast,type)
 FROM '[PROJECT_ROOT]\aggregator\csv\cff_out.csv' DELIMITER ',' CSV HEADER;
 ```
 
-Example API call: http://localhost:8080/forecast/incoming?from=1-1-2018&to=1-4-2018&periodDays=7
+Example API calls:
+
+Incoming actuals for the first quarter of 2018:
+
+http://localhost:8080/actuals/incoming?from=2018-01-01&to=2018-04-01
+```
+{
+  "from": "2018-01-01T00:00:00.000+0000",
+  "to": "2018-04-01T00:00:00.000+0000",
+  "amount": 89441.8317
+}
+```
+
+Forecasted outgoing invoices for 16-18 January 2018:
+
+http://localhost:8080/forecast/outgoing?from=2018-01-16&to=2018-01-18&periodDays=1
+
+```
+{
+  "from": "2018-01-16T00:00:00.000+0000",
+  "to": "2018-01-18T00:00:00.000+0000",
+  "periodDays": 1,
+  "cashflows": [
+    {
+      "from": "2018-01-16T00:00:00.000+0000",
+      "to": "2018-01-17T00:00:00.000+0000",
+      "amount": 2340.0000
+    },
+    {
+      "from": "2018-01-17T00:00:00.000+0000",
+      "to": "2018-01-18T00:00:00.000+0000",
+      "amount": 0
+    }
+  ]
+}
+```

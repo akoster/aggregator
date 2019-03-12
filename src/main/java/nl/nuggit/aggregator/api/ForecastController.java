@@ -24,16 +24,16 @@ public class ForecastController {
 
     @GetMapping(value = "/incoming")
     public Forecast getForecastIncomingInvoices(
-            @RequestParam("from") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date from,
-            @RequestParam("to") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date to,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date to,
             @RequestParam("periodDays") int periodDays) {
         return getForecast(from, to, periodDays, Ledger.RECEIVABLE_INVOICE);
     }
 
     @GetMapping(value = "/outgoing")
     public Forecast getForecastOutgoingInvoices(
-            @RequestParam("from") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date from,
-            @RequestParam("to") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date to,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date to,
             @RequestParam("periodDays") int periodDays) {
         return getForecast(from, to, periodDays, Ledger.PAYABLE_INVOICE);
     }

@@ -1,8 +1,8 @@
 package nl.nuggit.aggregator.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -20,53 +20,47 @@ public class InvoiceService {
 
     public BigDecimal getHistoricInvoiceTotal(Date from, Date to, Ledger ledger) {
         List<Invoice> invoices =
-                invoiceRepository.findByInvoiceDateGreaterThanEqualAndInvoiceDateLessThanEqualAndClosedDateAndLedgerCode(
-                from, to, null, ledger.getCode());
+                invoiceRepository.findByInvoiceDateGreaterThanEqualAndInvoiceDateLessThanEqualAndClosedDateNotNullAndLedgerCode(
+                from, to, ledger.getCode());
         return invoices.stream().map(Invoice::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public List<Cashflow> getForecasts(Date from, Date to, Ledger ledger, int periodDays) {
         List<Invoice> invoices =
-                invoiceRepository.findByDueDateGreaterThanEqualAndDueDateLessThanEqualAndClosedDateNotNullAndLedgerCodeOrderByDueDateAsc(
+                invoiceRepository.findByDueDateGreaterThanEqualAndDueDateLessThanEqualAndClosedDateIsNullAndLedgerCodeOrderByDueDateAsc(
                 from, to, ledger.getCode());
-        return aggregate(invoices, dayToMillis(periodDays));
+        return aggregate(invoices, from, to, dayToMillis(periodDays));
     }
 
     private int dayToMillis(int periodDays) {
         return periodDays * 24 * 60 * 60 * 1000;
     }
 
-    private List<Cashflow> aggregate(List<Invoice> invoices, long periodMillis) {
-        LinkedList<Cashflow> cashflows = new LinkedList<>();
+    private List<Cashflow> aggregate(List<Invoice> invoices, Date from, Date to, long periodMillis) {
+        List<Cashflow> cashflows = new ArrayList<>();
+        Cashflow cashflow = createCashflow(from, periodMillis);
+        cashflows.add(cashflow);
         for (Invoice invoice : invoices) {
-            if (cashflows.isEmpty()) {
-                cashflows.add(createCashflow(invoice));
-            }
-            aggregate(invoice, cashflows, periodMillis);
+            cashflow = walkToDate(cashflow, invoice.getDueDate(), periodMillis, cashflows);
+            cashflow.setAmount(cashflow.getAmount().add(invoice.getAmount()));
         }
+        cashflow = walkToDate(cashflow, to, periodMillis, cashflows);
         return cashflows;
     }
 
-    private Cashflow createCashflow(Invoice invoice) {
-        Cashflow cashflow = Cashflow.builder().amount(BigDecimal.ZERO).build();
-        cashflow.setFrom(invoice.getDueDate());
-        cashflow.setTo(invoice.getDueDate());
+    private Cashflow walkToDate(Cashflow cashflow, Date date, long periodMillis, List<Cashflow> cashflows) {
+        while (date.getTime() > cashflow.getTo().getTime()) {
+            cashflow = createCashflow(cashflow.getTo(), periodMillis);
+            cashflows.add(cashflow);
+        }
         return cashflow;
     }
 
-    private void aggregate(Invoice invoice, LinkedList<Cashflow> cashflows, long periodMillis) {
-        Cashflow cashflow = cashflows.getLast();
-        if (isInPeriod(cashflow, invoice, periodMillis)) {
-            cashflow.setAmount(cashflow.getAmount().add(invoice.getAmount()));
-            cashflow.setTo(invoice.getDueDate());
-        } else {
-            cashflows.add(cashflow);
-            cashflows.add(createCashflow(invoice));
-        }
-    }
-
-    private boolean isInPeriod(Cashflow cashflow, Invoice invoice, long periodMillis) {
-        return (invoice.getDueDate().getTime() - cashflow.getFrom().getTime()) < periodMillis;
+    private Cashflow createCashflow(Date from, long periodMillis) {
+        Cashflow cashflow = Cashflow.builder().amount(BigDecimal.ZERO).build();
+        cashflow.setFrom(from);
+        cashflow.setTo(new Date(from.getTime() + periodMillis));
+        return cashflow;
     }
 
 }

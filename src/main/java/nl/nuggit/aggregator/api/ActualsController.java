@@ -5,7 +5,6 @@ import java.util.Date;
 
 import lombok.AllArgsConstructor;
 import nl.nuggit.aggregator.api.model.Cashflow;
-import nl.nuggit.aggregator.model.Constants;
 import nl.nuggit.aggregator.model.Ledger;
 import nl.nuggit.aggregator.service.InvoiceService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,15 +22,15 @@ public class ActualsController {
 
     @GetMapping(value = "/incoming")
     public Cashflow getHistoricIncomingInvoiceTotal(
-            @RequestParam("from") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date from,
-            @RequestParam("to") @DateTimeFormat(pattern = Constants.DATE_FORMAT) Date to) {
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date to) {
         return getCashflow(from, to, Ledger.RECEIVABLE_INVOICE);
     }
 
     @GetMapping(value = "/outgoing")
     public Cashflow getHistoricOutgoingInvoiceTotal(
-            @DateTimeFormat(pattern = Constants.DATE_FORMAT) @RequestParam("from") Date from,
-            @DateTimeFormat(pattern = Constants.DATE_FORMAT) @RequestParam("to") Date to) {
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date to) {
         return getCashflow(from, to, Ledger.PAYABLE_INVOICE);
     }
 
