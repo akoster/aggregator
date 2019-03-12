@@ -12,17 +12,7 @@ public class ExceptionHandlerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> processException(Exception e) {
-        logCause(e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    private void logCause(Exception e) {
-        Throwable cause = e;
-        while (cause.getCause() != null) {
-            cause = cause.getCause();
-        }
-        log.warn("ExceptionHandlerAdvice processed exception {} : {}  with cause {} : {}", e.getClass(), e.getMessage(),
-                cause.getClass(), cause.getMessage());
     }
 
 }
